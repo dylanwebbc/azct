@@ -1,5 +1,5 @@
 # azct
-Code for visualizing a 3D model of, and printing origami patterns for, asymmetric zipper-coupled tubes and their smooth sheet attachment.
+Code for visualizing a 3D model of, and printing origami patterns for, asymmetric zipper-coupled tubes and their smooth sheet attachment. Below is a brief description of each python file.
 
 ### AZCT
   This file contains the mathematics for modelling an asymmetric zipper-coupled tubes structure and its smooth sheet attachment. It does not have an interface, but may be of interest to the more serious user for its example of how to program the design process for the device.
