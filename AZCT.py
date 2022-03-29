@@ -88,7 +88,7 @@ def azct(origin, alpha1, alpha2, la, lb, lc, gamma, ssa=True, lb0=None):
         ld0 = lb0*(np.sin(alpha1)/np.sin(alpha4))
         ls = ((2*lb - lb0)*np.cos(alpha1) + (2*ld - ld0)*np.cos(alpha4))/2
     else:
-        ls = (lb*np.cos(alpha1) + ld*np.cos(alpha4))/2
+        ls = (lb*np.cos(alpha1) + ld*np.cos(alpha4))/(2*la)
 
     # Define the shift vector s
     def s(g=gamma): return (1 + ls)*a(g) + c(g)
@@ -142,8 +142,8 @@ def azct(origin, alpha1, alpha2, la, lb, lc, gamma, ssa=True, lb0=None):
         # Derive angles for computing candidate length lw1
         beta1 = np.arccos(np.dot(-cbar(gamma0), vbar(gamma0))/\
                           (lc*np.linalg.norm(vbar(gamma0))))
-        beta2 = np.arccos(np.dot(-cbar(gamma0), d(gamma0) - ls*a(gamma0)/la)/\
-                          (lc*np.linalg.norm(d(gamma0) - ls*a(gamma0)/la)))
+        beta2 = np.arccos(np.dot(-cbar(gamma0), d(gamma0) - ls*a(gamma0))/\
+                          (lc*np.linalg.norm(d(gamma0) - ls*a(gamma0))))
 
         # Get the length of w
         lw1 = lc + lv1/np.tan(beta1) - lv1/np.tan(beta2)
