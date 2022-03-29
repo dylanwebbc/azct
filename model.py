@@ -13,7 +13,7 @@ def plot(edges, ssa):
         ssa (string): String signifying whether or not there are edges
                 in a smooth sheet attachment to color
     """
-
+    
     # Define colors
     cols = np.tile(np.array([0, 0, 0]), (len(edges), 1))
     if ssa:
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
             # Get gamma as input
             gamma = float(input("  Driving angle gamma (between "
-                                + str(round(gamma0 + 5e-5, 4)) +
+                                + str(round(gamma0 + 1e-4, 4)) +
                                 " and 90: "))*np.pi/180 - 1e-6
 
             # Check if gamma is valid
