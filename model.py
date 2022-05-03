@@ -48,7 +48,7 @@ if __name__ == '__main__':
     # Whether or not to have smooth sheet attachments
     ssa = False
     if nue != 'y':
-        ssa = input("Does you structure have smooth sheet attachments? (y/n): ") == 'y'
+        ssa = input("Does your structure have smooth sheet attachments? (y/n): ") == 'y'
 
     origin = np.array([0, 0, 0])
     lb0 = None
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
             # Check if gamma is valid
             if gamma*180/np.pi < gamma0 or gamma*180/np.pi > 90:
-                raise ValueError("Incorrect value entered for gamma")
+                raise ValueError("Invalid value entered for gamma")
             
             # Set bhat and dhat
             bhat = np.array([-np.sin(alpha1)*np.cos(gamma),
