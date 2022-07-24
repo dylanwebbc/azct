@@ -26,7 +26,7 @@ def __getBounds(edges):
     return min(Xs), max(Xs), min(Ys), max(Ys)
 
 
-def printTube(edges, ssa, n):
+def printTube(edges, ssa, n, bounds):
     """ Prints origami folding pattern as a jpeg image
         for the asymmetric zipper-coupled tube given a set of edges
 
@@ -36,8 +36,8 @@ def printTube(edges, ssa, n):
         n (int): The number of components in the structure
     """
 
-    # Get the bounds for the overlayed structures
-    xmin, xmax, ymin, ymax = __getBounds(edges[:, [0, 2, 3, 5]])
+    # Get the bounds for plotting
+    xmin, xmax, ymin, ymax = bounds
     
     # Loop n times and derive
     mountain = np.empty((0,4))
@@ -45,10 +45,10 @@ def printTube(edges, ssa, n):
     for i in range(n):
 
         # Get the basic cell and its complement from the vertices
-        basic = edges[[40*i + v for v in [0, 3, 4, 7, 8, 11, 12,
+        basic = edges[[40*i + x for x in [0, 3, 4, 7, 8, 11, 12,
                                           13, 15, 17, 16, 19]], :][:, [0, 2, 3, 5]]
         
-        complement = edges[[40*i + v for v in [1, 2, 5, 6, 9, 10,
+        complement = edges[[40*i + x for x in [1, 2, 5, 6, 9, 10,
                                                13, 14, 15, 17, 18, 19]], :][:, [0, 2, 3, 5]]
 
         # Shift basic cells up and over and reflect
@@ -113,7 +113,7 @@ def printTube(edges, ssa, n):
     plt.savefig("AZCT Pattern.jpg", dpi=600)
 
 
-def printSheet(edges, n):
+def printSheet(edges, ssa, n, bounds):
     """ Prints origami folding pattern as a jpeg image
         for the smooth sheet attachment given a set of edges
 
@@ -122,34 +122,68 @@ def printSheet(edges, n):
                              outputted by AZCT.azct
         n (int): The number of components in the structure
     """
-    
-    # Get the bounds for a sheet cell
-    xmin, xmax, ymin, ymax = __getBounds(edges[np.ravel(
-        [np.arange(60*i + 50, 60*i + 54) for i in range(n)]), :][:, [0, 1, 3, 4]])
-    
+
+    # Get the bounds for plotting
+    xmin, xmax, ymin, ymax = bounds
+
+    # Specify the indices of the edges to be plotted in cell1 and cell2
+    # Also specify which edges are valley folds and which are mountain
+    if ssa == 1:
+        num = 60
+        
+        indices1 = [21, 29, 50, 51, 52, 53, 59]
+        m1 = [0, 1, 2, 3, 4, 5]
+        v1 = [6]
+        
+        indices2 = indices1
+        m2 = m1
+        v2 = v1
+        
+    elif ssa == 2:
+        num = 78
+        shift = edges[4][3]
+        
+        indices1 = [66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77]
+        m1 = [1, 2, 4, 5, 6, 7, 9, 10, 11]
+        v1 = [0, 3, 8]
+
+        indices2 = [40, 41, 42, 43, 44, 45, 46]
+        m2 = [0, 1, 2, 3, 5, 6]
+        v2 = [4]
+
     # Loop n times and derive 
     mountain = np.empty((0,4))
     valley = np.empty((0,4))
     for i in range(n):
 
-        # Get the correct cell edges from the structure
-        cell1 = edges[[60*i + v for v in [21, 29, 50, 51, 52, 53, 59]]][:, [0, 1, 3, 4]]
-
-        # Shift cell close to origin
-        for edge in cell1:
-            edge[1] -= (ymax + .2)
+        # Get the cell edges from the structure
+        cell1 = edges[[num*i + x for x in indices1]][:, [0, 1, 3, 4]]
 
         # Define second cell which is a reflection of the first
-        cell2 = cell1.copy()
-        for edge in cell2:
-            edge[1] *= -1
-            edge[3] *= -1
+        cell2 = edges[[num*i + x for x in indices2]][:, [0, 1, 3, 4]]
+
+        # Flip cell2 if regular and then shift all cells
+        if ssa == 1:
+            for edge in cell2:
+                edge[1] *= -1
+                edge[3] *= -1
+        
+            for edge in cell1:
+                edge[1] -= (ymax + .2)
+            for edge in cell2:
+                edge[1] += (ymax + .2)
+
+        elif ssa == 2:
+            for edge in cell1:
+                edge[1] -= (ymax)
+            for edge in cell2:
+                edge[1] -= (ymax - .4)
             
         # Add mountain and valley folds
-        mountain = np.append(mountain, np.concatenate((cell1[0:6],
-                                             cell2[0:6])), axis=0)
-        valley = np.append(valley, np.vstack((cell1[6],
-                                             cell2[6])), axis=0)
+        mountain = np.append(mountain, np.concatenate((cell1[m1],
+                                             cell2[m2])), axis=0)
+        valley = np.append(valley, np.vstack((cell1[v1],
+                                             cell2[v2])), axis=0)
     
     # Plot mountain folds
     fig, ax = plt.subplots()
@@ -166,7 +200,7 @@ def printSheet(edges, n):
 
     # Plot and save to file
     ax.set_xlim([xmin - .3, xmax + .3])
-    ax.set_ylim([-(ymax - ymin + .4), (ymax - ymin + .4)])
+    ax.set_ylim([-(ymax - ymin + .5), (ymax - ymin + .5)])
     ax.axis('off')
     ax.set_aspect('equal')
     plt.savefig("SSA Pattern.jpg", dpi=600)
@@ -175,19 +209,27 @@ def printSheet(edges, n):
 # Main loop for user interface
 if __name__ == '__main__':
 
+    # Number of components
     n = int(input("Enter the number of components in Z,\n" +
                   "your asymmetric zipper-coupled tubes structure: "))
+    if n < 1:
+        raise ValueError("Number must be a positive integer")
 
     # Whether or not to have non-uniform extensions
     nue = 'n'
     if n > 1:
         nue = input("Does your structure contain non-uniform extensions? (y/n): ")
-
-    # Whether or not to have smooth sheet attachments
-    ssa = False
+        if nue not in ['y', 'n']:
+            raise ValueError("Please respond either y or n")
+            
+    # Whether or not to have smooth sheet attachments and which type
+    ssa = 0
     if nue != 'y':
-        ssa = input("Does you structure have smooth sheet attachments? (y/n): ") == 'y'
-
+        if input("Does your structure have smooth sheet attachments? (y/n): ") == 'y':
+            ssa = int(input("Are the attachments regular (1) or Miura-ori inspired (2)?: "))
+            if ssa not in [1, 2]:
+                raise ValueError("Attachment type must be either 1 or 2")
+            
     origin_flat = np.array([0, 0, 0])
     origin_ideal = np.array([0, 0, 0])
     lb0 = None
@@ -201,7 +243,9 @@ if __name__ == '__main__':
                 lb0 = lb
             lb = float(input("  Length of crease b in component "
                         + str(i + 1) + ": "))
-
+            if lb <= 0:
+                raise ValueError("Lengths must be positive")
+            
         # Get design angles and lengths on first loop
         if i == 0:
 
@@ -247,7 +291,7 @@ if __name__ == '__main__':
                 dhat_ideal = np.array([np.sin(alpha4)*np.cos(gamma0),
                                       np.sin(alpha4)*np.sin(gamma0),
                                       -np.cos(alpha4)])
-                edges_ideal = azct(origin_ideal, alpha1, alpha2, la, lb, lc, gamma0)
+                edges_ideal = azct(origin_ideal, alpha1, alpha2, la, lb, lc, gamma0, ssa=ssa)
 
             
             # Set bhat and dhat for unfolded state
@@ -259,24 +303,29 @@ if __name__ == '__main__':
                                   -np.cos(alpha4)])
 
             # Define the first component
-            edges_flat = azct(origin_flat, alpha1, alpha2, la, lb, lc, gamma, ssa=False, lb0=lb0)
+            edges_flat = azct(origin_flat, alpha1, alpha2, la, lb, lc, gamma, ssa=0, lb0=lb0)
             
         else:
             # Update origin and attach new component in unfolded state
             origin_flat = origin_flat + ld*dhat_flat - lb*bhat_flat
-            component = azct(origin_flat, alpha1, alpha2, la, lb, lc, gamma, ssa=False, lb0=lb0)
+            component = azct(origin_flat, alpha1, alpha2, la, lb, lc, gamma, ssa=0, lb0=lb0)
             edges_flat = np.concatenate((edges_flat, component))
 
             if ssa:
                 # Update origin and attach new component in ideal state
                 origin_ideal = origin_ideal + ld*dhat_ideal - lb*bhat_ideal
-                component = azct(origin_ideal, alpha1, alpha2, la, lb, lc, gamma0)
+                component = azct(origin_ideal, alpha1, alpha2, la, lb, lc, gamma0, ssa=ssa)
                 edges_ideal = np.concatenate((edges_ideal, component))
 
         # Update the length of d in the most recent component
         ld = lb*(np.sin(alpha1)/np.sin(alpha4))
 
+    # Get the bounds for plotting
+    xmin1, xmax1, ymin1, ymax1 = __getBounds(edges_flat[:, [0, 2, 3, 5]])
+    xmin2, xmax2, ymin2, ymax2 = __getBounds(edges_ideal[:, [0, 1, 3, 4]])
+    bounds = (min(xmin1, xmin2), max(xmax1, xmax2), min(ymin1, ymin2), max(ymax1, ymax2))
+    
     # Plot the resulting structure
-    printTube(edges_flat, ssa, n)
+    printTube(edges_flat, ssa, n, bounds)
     if ssa:
-        printSheet(edges_ideal, n)
+        printSheet(edges_ideal, ssa, n, bounds)

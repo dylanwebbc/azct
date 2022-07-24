@@ -17,8 +17,10 @@ def plot(edges, ssa):
     # Define colors
     cols = np.tile(np.array([0, 0, 0]), (len(edges), 1))
     if ssa:
-        for i in range(len(edges)//60):
-            cols[(60*i + 40):(60*i + 60)] = np.array([1, 0, 0])
+        if ssa == 1: num = 60
+        elif ssa == 2: num = 78
+        for i in range(len(edges)//num):
+            cols[(num*i + 40):(num*i + num)] = np.array([1, 0, 0])
 
     # Plot vectors
     X, Y, Z, U, V, W = zip(*edges)
@@ -37,18 +39,26 @@ def plot(edges, ssa):
 # Main loop for user interface
 if __name__ == '__main__':
 
+    # Number of components
     n = int(input("Enter the number of components in Z,\n" +
                   "your asymmetric zipper-coupled tubes structure: "))
+    if n < 1:
+        raise ValueError("Number must be a positive integer")
 
     # Whether or not to have non-uniform extensions
     nue = 'n'
     if n > 1:
         nue = input("Does your structure contain non-uniform extensions? (y/n): ")
-
-    # Whether or not to have smooth sheet attachments
-    ssa = False
+        if nue not in ['y', 'n']:
+            raise ValueError("Please respond either y or n")
+            
+    # Whether or not to have smooth sheet attachments and which type
+    ssa = 0
     if nue != 'y':
-        ssa = input("Does your structure have smooth sheet attachments? (y/n): ") == 'y'
+        if input("Does your structure have smooth sheet attachments? (y/n): ") == 'y':
+            ssa = int(input("Are the attachments regular (1) or Miura-ori inspired (2)?: "))
+            if ssa not in [1, 2]:
+                raise ValueError("Attachment type must be either 1 or 2")
 
     origin = np.array([0, 0, 0])
     lb0 = None
@@ -62,6 +72,8 @@ if __name__ == '__main__':
                 lb0 = lb
             lb = float(input("  Length of crease b in component "
                         + str(i + 1) + ": "))
+            if lb <= 0:
+                raise ValueError("Lengths must be positive")
 
         # Get design angles and lengths on first loop
         if i == 0:
