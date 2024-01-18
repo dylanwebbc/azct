@@ -3,9 +3,9 @@ message: "If you use this software and wish to cite it, please contact me at dyl
 authors:
 - family-names: "Webb"
   given-names: "Dylan"
-  orcid: 
+  orcid: 0000-0002-1878-171X
 title: "azct"
 version: 1.0.0
-doi: 
+doi: https://doi.org/10.1115/1.4056868
 date-released: 2022-02
 url: "https://github.com/dylanwebbc/azct"
